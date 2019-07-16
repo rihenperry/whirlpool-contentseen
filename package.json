@@ -1,0 +1,80 @@
+{
+  "name": "whirlpool-contentseen",
+  "version": "1.0.0",
+  "description": "whirlpool crawler project component; responsible for extract text and checking for redundant pages against fingerprinting database",
+  "scripts": {
+    "build-contentseenq-js": "babel src --out-dir lib",
+    "build": "npm run build-contentseenq-js",
+    "prestart": "npm run build-contentseenq-js",
+    "start": "cross-env SSR=true node ./lib/listener.js",
+    "debug": "cross-env DEBUG=whirlpool-contentseen SSR=true node babel-node src/listener.js",
+    "lint": "eslint .",
+    "test": "",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ]
+  },
+  "engines": {
+    "node": ">=10.0.0 <11.0.0",
+    "npm": ">=6.0.0 <7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rihbyne/whirlpool-contentseen.git"
+
+  },
+  "keywords": [
+    "mercator",
+    "whirlpool",
+    "mscs",
+    "rihan",
+    "pereira",
+    "contentseen",
+    "rabbitmq",
+    "postgres",
+    "message",
+    "broker",
+    "fingerprinting",
+    "bloomfiltering",
+    "docker"
+  ],
+  "author": "Rihan Pereira, MSCS, rihen234@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rihbyne/whirlpool-contentseen/issues"
+  },
+  "homepage": "https://github.com/rihbyne/whirlpool-contentseen#readme",
+  "dependencies": {
+    "amqplib": "^0.5.3",
+    "bluebird": "^3.5.5",
+    "lodash": "^4.17.13",
+    "mongoose": "^5.6.4",
+    "sequelize": "^5.10.0",
+    "winston": "^3.2.1",
+    "winston-daily-rotate-file": "^3.9.0"
+  },
+  "devDependencies": {
+    "cross-env": "^5.2.0",
+    "babel": "^6.23.0",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.0.3",
+    "babel-plugin-array-includes": "^2.0.3",
+    "babel-plugin-lodash": "^3.3.4",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
+    "babel-plugin-transform-object-rest-spread": "^6.8.0",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "babelify": "^8.0.0",
+    "eslint": "^6.0.1",
+    "eslint-loader": "^2.1.0",
+    "eslint-plugin-babel": "^4.1.2",
+    "eslint-plugin-import": "^2.8.0",
+    "lint-staged": "^9.1.0"
+  }
+}

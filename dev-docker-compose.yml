@@ -1,0 +1,29 @@
+version: '3.7'
+
+networks:
+  default:
+    external:
+      name: whirlpool-net
+
+
+services:
+
+  whirlpool-contentseen:
+    container_name: whirlpool-contentseen
+    entrypoint: bash ./scripts/wait-for-it.sh
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: whirlpool-contentseen-dev
+    restart: on-failure
+    depends_on:
+      - whirlpool-postgres
+ 
+  whirlpool-postgres:
+    container_name: whirlpool-postgres
+    image: rihbyne/whirlpool-postgres:latest
+    restart: on-failure
+    ports:
+      - "5432:5432"
+    volumes:
+      - /covered/whirlpool/postgresdata/:/var/lib/postgresql/data
