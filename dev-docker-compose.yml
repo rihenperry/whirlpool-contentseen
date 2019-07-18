@@ -18,12 +18,3 @@ services:
     restart: on-failure
     depends_on:
       - whirlpool-postgres
- 
-  whirlpool-postgres:
-    container_name: whirlpool-postgres
-    image: rihbyne/whirlpool-postgres:latest
-    restart: on-failure
-    ports:
-      - "5432:5432"
-    volumes:
-      - /covered/whirlpool/postgresdata/:/var/lib/postgresql/data
