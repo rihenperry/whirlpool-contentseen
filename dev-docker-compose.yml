@@ -16,5 +16,3 @@ services:
       dockerfile: Dockerfile
       target: whirlpool-contentseen-dev
     restart: on-failure
-    depends_on:
-      - whirlpool-postgres

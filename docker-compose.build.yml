@@ -1,0 +1,34 @@
+version: '2.4'
+
+networks:
+  default:
+    external:
+      name: whirlpool-net
+
+services:
+
+  base:
+    image: node:10.16.0
+    command: bash -c "useradd --create-home --shell /bin/bash whirlpool && chown -R whirlpool:whirlpool /home/whirlpool/whirlpool-contentseen"
+    volumes:
+      - .:/home/whirlpool/whirlpool-contentseen
+      - wh-contentseen:/home/whirlpool/whirlpool-contentseen/node_modules
+    working_dir: /home/whirlpool/whirlpool-contentseen
+    environment:
+      - PY_ENV=development
+    networks:
+      - default
+
+  install:
+    extends:
+      service: base
+    command: npm install --no-audit
+
+  quick-up:
+    extends:
+      service: base
+    command: npm start
+
+volumes:
+  wh-contentseen:
+    external: true
