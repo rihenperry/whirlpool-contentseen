@@ -26,6 +26,7 @@ const amqp = require('amqplib');
 const log = logger(module);
 
 async function listenForMessagesFromParserPublisher() {
+  // connect to mongodb, postgres, memcache
   // connect to RabbitMQ Instance
   log.info('rabbitmq config %s', JSON.stringify(config.rabbitmq));
   let connection = await amqp.connect(config.rabbitmq);
