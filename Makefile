@@ -8,7 +8,7 @@ dev-build:
 	docker build --no-cache -t whirlpool-contentseen-dev:latest --target whirlpool-contentseen-dev .
 
 prod-build:
-	docker build --no-cache -t whirlpool-contentseen-prod:latest --target whirlpool-contentseen-prod .
+	docker build -t whirlpool-contentseen-prod:latest --target whirlpool-contentseen-prod .
 
 dev-up:
 	docker-compose -f dev-docker-compose.yml up --build -d
