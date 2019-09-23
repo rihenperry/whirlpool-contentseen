@@ -1,36 +1,87 @@
+import util from 'util';
+const _ = require('lodash');
+import mongoose from 'mongoose';
+import path from 'path';
+
 import logger from './helpers/applogging';
+import DocExtractor from './helpers/extract.js';
+import fp from './helpers/fp.js';
+
 
 const log = logger(module);
 
-export let contentSeenConsume = async function({connection, consumeChannel, publishChannel}) {
+export let contentSeenConsume = async function({rmqConn, consumeChannel, publishChannel}) {
   return new Promise((resolve, reject) => {
     consumeChannel.consume("contentseen.q", async function(msg) {
-      let msgBody = msg.content.toString();
-      let data = JSON.parse(msgBody);
+      let pgFromQ = JSON.parse(msg.content.toString());
+      log.info('domain %s, locating page doc %s', pgFromQ.domain, pgFromQ._id);
 
-      log.info('contenteseen_c received request to process ', data);
+      let HTMLMetaDB = mongoose.model('whirlpoolpage');
+      let ContentDB = mongoose.model('contentdb');
 
-      // process the request, acknowledged and forget about it. No need to publish
-      // to any exchange
+      let queryHTMLDoc = HTMLMetaDB.findOne({_id: pgFromQ._id});
 
-      try {
-        await consumeChannel.ack(msg);
-        log.info('consumer msg acknowledged of work done by contentseen_c');
+      queryHTMLDoc.exec(async (err, page) => {
+        if (err) {
+          reject(err);
+        } else if (page && page.html.length !== 0) {
+          log.info('domain %s, parsing doc %s', page.domain, page._id);
 
-        resolve('processed single message with durable confirmation');
-      } catch (e) {
-        return reject(e);
-      }
-    });
+          // process the request, acknowledged and forget about it. No need to publish
+          // to any exchange
+          try {
+            const xdoc = new DocExtractor(page.domain, page._id, page.html);
+            const txt = await xdoc.rawText();
+
+            if (txt.length !== 0) {
+              log.info(`hashing doc ${page._id}, domain ${page.domain}`);
+
+              const h = await fp.pHash(txt);
+
+              if (await fp.pHashSeen(h)) {
+                log.info(`doc ${page._id}, domain ${page.domain} dropping`);
+                xdoc.dropPage();
+              } else {
+                let seenObj = {
+                  page_fp: h,
+                  page_type: 'nc',
+                  doc_id: page._id,
+                  domain: page.domain,
+                  fp_alg: 'sha1'
+                };
+                Promise.all([fp.pHashSave(seenObj), xdoc.save()])
+                  .then(([hsave, psave]) => {
+                    log.info(`doc ${page._id}, domain ${page.domain}. saved hash ${hsave}. saved ${psave}`);
+                    log.info(`doc ${page._id}, domain ${page.domain} dropping`);
+                    xdoc.dropPage();
+                  }).catch(error => {
+                    log.error(`error saving doc ${page._id}, domain ${page.domain}. ${error}`);
+                  });
+              }
+            } else {
+              log.warn(`doc ${page._id}, domain ${page.domain} is empty. dropping`);
+              xdoc.dropPage();
+            }
+
+            //acknowledge consumer message
+            await consumeChannel.ack(msg);
+            resolve('consumer msg acknowledged of work done by contentseen_c');
+          } catch (e) {
+            reject(e);
+          }
+        } else {
+          let m = `page ${pgFromQ._id} not found...`;
+          log.warn(m);
+          reject(m);
+        }
+      }); // end of queryHTMLDoc exec
+    }); // end of consume channel
 
     // handle connection closed
-    connection.on("close", (err) => {
-      return reject(err);
-    });
+    rmqConn.on("close", (err) => reject(err));
 
     // handle errors
-    connection.on("error", (err) => {
-      return reject(err);
-    });
-  });
+    rmqConn.on("error", (err) => reject(err));
+
+  }); //end of promise func
 };

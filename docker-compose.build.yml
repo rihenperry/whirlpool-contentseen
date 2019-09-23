@@ -15,7 +15,7 @@ services:
       - wh-contentseen:/home/whirlpool/whirlpool-contentseen/node_modules
     working_dir: /home/whirlpool/whirlpool-contentseen
     environment:
-      - PY_ENV=development
+      - NODE_ENV=development
     networks:
       - default
 

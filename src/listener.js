@@ -17,38 +17,35 @@
  */
 /* eslint global-require: 'warn' */
 
-import config from './helpers/config';
-import logger from './helpers/applogging';
+import {authMongoDB, authPostgres, authMemCache, authRMQ} from './helpers/config';
 import {contentSeenConsume as consume} from './consumer';
-
-const amqp = require('amqplib');
+import logger from './helpers/applogging';
 
 const log = logger(module);
 
 async function listenForMessagesFromParserPublisher() {
-  // connect to mongodb, postgres, memcache
-  // connect to RabbitMQ Instance
-  log.info('rabbitmq config %s', JSON.stringify(config.rabbitmq));
-  let connection = await amqp.connect(config.rabbitmq);
-
-  log.info('authenticated to rabbitmq host %s, vhost %s as user %s',
-             config.rabbitmq.hostname,
-             config.rabbitmq.vhost,
-             config.rabbitmq.username);
-
-  // create consumer channel and prefetch 1 message at a time
-  let consumeChannel = await connection.createChannel();
-  await consumeChannel.prefetch(1);
-  log.info('listening with prefetch 1 message at a time');
-
-  // create publisher channel to send work produce to parser consumer via
-  // fetch publisher
-  let publishChannel = await connection.createConfirmChannel();
-  let ansConsume;
   try {
-    ansConsume = await consume({connection, consumeChannel, publishChannel});
+    // connect to mongodb, postgres, memcache
+    await authMongoDB();
+    await authMemCache.connect();
+    await authPostgres.connect();
+
+    // connect to RabbitMQ Instance
+    let rmqConn = await authRMQ();
+
+    // create consumer channel and prefetch 1 message at a time
+    let consumeChannel = await rmqConn.createChannel();
+    await consumeChannel.prefetch(1);
+    log.info('listening with prefetch 1 message at a time');
+
+    // create publisher channel to send work produce to parser consumer via
+    // fetch publisher
+    let publishChannel = await rmqConn.createConfirmChannel();
+    let ansConsume;
+
+    ansConsume = await consume({rmqConn, consumeChannel, publishChannel});
     log.info(ansConsume);
-  } catch(e) {
+  } catch (e) {
     log.error('consume function ', e);
   }
 }
