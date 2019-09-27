@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const cheerio = require('cheerio');
 const async = require('async');
+const util = require('util');
 
 import logger from '../helpers/applogging.js';
 
@@ -45,13 +46,24 @@ class DiceExtract {
 
       if (!_.includes(matchTest, false)) {
         let detail = $('#jt').next().text().trim();
-        let newDetail = detail.replace("\\s+", "").replace(/\t+/g, '').replace(/\n+/g, '').trim();
+        let newDetail = detail.replace("\\s+", "").replace(/\t+/g, '').replace(/\n+/g, '.').trim();
 
         let body = $('#jobdescSec').html();
         let newBody = body.replace("\\s+", "").replace(/\t+/g, '').replace(/\n+/g, '').trim();
 
-        txt.detail = newDetail;
-        txt.newBody = newBody;
+        let tmp = newDetail.length !== 0 ? newDetail.split('.'): [];
+
+        txt.title = $('#jt').text();
+        txt.company = $('#compNameSSDL').attr('value');
+        txt.location = $('#estJLoc').attr('value');
+        txt.job_posting_date = tmp[tmp.length-1];
+        txt.body = newBody;
+        txt.estimate = $('.icon-bank-note').parent().next().text();
+        txt.skills = $('#estSkillText').attr('value');
+        txt.emp_type = $('#empTypeSSDL').attr('value') || $('#taxTermsTextId').attr('value');
+        txt.misc = {
+          other: $('.icon-network-2').parent().next().text()
+        };
 
         resolve(txt);
       } else {
@@ -60,3 +72,5 @@ class DiceExtract {
     });
   }
 }
+
+export default DiceExtract;

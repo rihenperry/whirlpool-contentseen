@@ -5,8 +5,7 @@ import path from 'path';
 
 import logger from './helpers/applogging';
 import DocExtractor from './helpers/extract.js';
-import fp from './helpers/fp.js';
-
+import {pHash, pHashSeen, pHashSave} from './helpers/fp.js';
 
 const log = logger(module);
 
@@ -25,37 +24,39 @@ export let contentSeenConsume = async function({rmqConn, consumeChannel, publish
         if (err) {
           reject(err);
         } else if (page && page.html.length !== 0) {
-          log.info('domain %s, parsing doc %s', page.domain, page._id);
+          log.info('domain %s, extracting doc %s', page.domain, page._id);
 
           // process the request, acknowledged and forget about it. No need to publish
           // to any exchange
           try {
-            const xdoc = new DocExtractor(page.domain, page._id, page.html);
+            const xdoc = new DocExtractor(page.domain, pgFromQ.url, page._id, page.html);
             const txt = await xdoc.rawText();
 
-            if (txt.length !== 0) {
+            if (txt.toString('base64').length !== 0) {
               log.info(`hashing doc ${page._id}, domain ${page.domain}`);
 
-              const h = await fp.pHash(txt);
+              const h = await pHash(txt);
 
-              if (await fp.pHashSeen(h)) {
-                log.info(`doc ${page._id}, domain ${page.domain} dropping`);
+              if (await pHashSeen(h)) {
+                log.info(`hash ${h} already exist. doc ${page._id}, domain ${page.domain} dropping`);
                 xdoc.dropPage();
               } else {
+                let content_id = mongoose.Types.ObjectId();
                 let seenObj = {
                   page_fp: h,
                   page_type: 'nc',
-                  doc_id: page._id,
+                  whirlpool_page_id: page._id.toString(),
+                  content_page_id: content_id.toString(),
                   domain: page.domain,
                   fp_alg: 'sha1'
                 };
-                Promise.all([fp.pHashSave(seenObj), xdoc.save()])
+                Promise.all([pHashSave(seenObj), xdoc.save(content_id)])
                   .then(([hsave, psave]) => {
-                    log.info(`doc ${page._id}, domain ${page.domain}. saved hash ${hsave}. saved ${psave}`);
+                    log.info(`doc ${page._id}, domain ${page.domain}. saved hash ${h} ${hsave}. saved page ${psave}`);
                     log.info(`doc ${page._id}, domain ${page.domain} dropping`);
                     xdoc.dropPage();
                   }).catch(error => {
-                    log.error(`error saving doc ${page._id}, domain ${page.domain}. ${error}`);
+                    log.error(`error collecting doc ${page._id}, domain ${page.domain}. ${error}`);
                   });
               }
             } else {

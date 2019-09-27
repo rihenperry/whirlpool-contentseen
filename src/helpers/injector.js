@@ -1,6 +1,6 @@
 import DiceExtract from '../plugins/dice';
-//import SimplyHiredExtract from '../plugins/simplyhired.js';
-//import MonsterJobsExtract from '../plugins/monster.js';
+import SimplyHiredExtract from '../plugins/simplyhired.js';
+import MonsterJobsExtract from '../plugins/monster.js';
 
 const injector = {
   deps: {},
@@ -13,9 +13,8 @@ const injector = {
 };
 
 injector.register(DiceExtract._domain, DiceExtract);
-//injector.register(SimplyHiredExtract._domain, SimplyHiredExtract);
-//injector.register(SimplyHiredExtract._domain, SimplyHiredExtract);
-//injector.register(MonsterJobsExtract._domain, MonsterJobsExtract);
-//injector.register(MonsterJobsExtract._otherdomain, MonsterJobsExtract);
+injector.register(SimplyHiredExtract._domain, SimplyHiredExtract);
+injector.register(MonsterJobsExtract._domain, MonsterJobsExtract);
+injector.register(MonsterJobsExtract._otherdomain, MonsterJobsExtract);
 
 export default injector;

@@ -3,7 +3,8 @@ module.exports = (sequelize, DataTypes) => {
   const SeenTest = sequelize.define('SeenTest', {
     page_fp: {type: DataTypes.STRING, allowNull: false},
     page_type: {type: DataTypes.STRING, allowNull: false},
-    doc_id: {type: DataTypes.STRING, allowNull: false},
+    whirlpool_page_id: {type: DataTypes.STRING, allowNull: false},
+    content_page_id: {type: DataTypes.STRING, allowNull: false},
     domain: {type: DataTypes.STRING, allowNull: false},
     fp_alg: {type: DataTypes.STRING, defaultValue: 'farmhash'},
     createdAt: { defaultValue: DataTypes.NOW, type: DataTypes.DATE},
