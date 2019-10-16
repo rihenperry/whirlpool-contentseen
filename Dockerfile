@@ -15,6 +15,7 @@ COPY .babelrc ./
 COPY .eslintrc.js ./
 COPY .eslintignore ./
 COPY package-lock.json ./
+COPY .sequelizerc ./
 
 RUN mkdir logs/ \
   && npm install --no-audit

@@ -3,6 +3,7 @@
 config/*
 !config/config.json
 !config/config.json.ctmpl
+!config/dbformigrations.js
 lib/
 node_modules/
 .editorconfig
